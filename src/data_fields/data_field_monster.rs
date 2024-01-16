@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
 use crate::data_fields::data_field::{DataField, DataValue, ValueReadFailureReason};
 use crate::data_fields::data_location::DataLocation;
 use crate::data_fields::monster::Monster;
+use crate::data_fields::CHARACTER_MAP;
 
 const MONSTER_DATA_LENGTH_BYTES: usize = 0x104;
 
@@ -20,13 +19,6 @@ impl DataFieldMonster {
 
 impl DataFieldMonster {
     fn bytes_to_string(bytes: &[u8]) -> String {
-        let mut character_map: HashMap<u8, char> = HashMap::new();
-        character_map.insert(0x0B, 'A');
-        character_map.insert(0x0C, 'B');
-        character_map.insert(0x28, 'd');
-        character_map.insert(0x39, 'u');
-        character_map.insert(0x3D, 'y');
-
         let mut chars: Vec<char> = vec![];
         for b in bytes {
             if *b == 0xFF {
@@ -35,7 +27,7 @@ impl DataFieldMonster {
 
             println!("{:}", b);
 
-            chars.push(*character_map.get(b).unwrap());
+            chars.push(*CHARACTER_MAP.get(b).unwrap());
         }
 
         chars.into_iter().collect()
