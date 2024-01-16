@@ -1,7 +1,10 @@
+use crate::data_fields::monster::Monster;
+
 #[derive(Clone, Debug)]
 pub enum DataValue {
     U8(u8),
     U32(u32),
+    Monster(Monster),
 }
 
 #[derive(Debug)]

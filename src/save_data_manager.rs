@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::data_fields::{DataField, DataFieldU32, DataValue};
+use crate::data_fields::{DataField, DataFieldMonster, DataFieldU32, DataValue};
 use crate::raw_save_data::RawSaveData;
 
 pub struct SaveDataManager {
@@ -17,6 +17,10 @@ impl SaveDataManager {
         );
         fields.insert(String::from("gold"), Box::new(DataFieldU32::new(0x184, 4)));
         fields.insert(String::from("atm"), Box::new(DataFieldU32::new(0x188, 4)));
+        fields.insert(
+            String::from("party_monster_1"),
+            Box::new(DataFieldMonster::new(0x65C)),
+        );
 
         SaveDataManager {
             raw: raw.clone(),
