@@ -25,8 +25,6 @@ impl DataFieldMonster {
                 break;
             }
 
-            println!("{:}", b);
-
             chars.push(*CHARACTER_MAP.get(b).unwrap());
         }
 
