@@ -15,6 +15,7 @@ impl SaveDataManager {
             String::from("checksum"),
             Box::new(DataFieldU32::new(0xC, 4)),
         );
+        fields.insert(String::from("gold"), Box::new(DataFieldU32::new(0x184, 4)));
 
         SaveDataManager {
             raw: raw.clone(),
