@@ -21,6 +21,10 @@ impl SaveDataManager {
             String::from("party_monster_1"),
             Box::new(DataFieldMonster::new(0x65C)),
         );
+        fields.insert(
+            String::from("party_monster_2"),
+            Box::new(DataFieldMonster::new(0x7F0)),
+        );
 
         SaveDataManager {
             raw: raw.clone(),
