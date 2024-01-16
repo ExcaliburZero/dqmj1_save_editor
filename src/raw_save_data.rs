@@ -17,4 +17,19 @@ impl RawSaveData {
 
         Ok(RawSaveData { raw })
     }
+
+    pub fn calculate_checksum(&self) -> u32 {
+        let mut checksum: u32 = 0;
+        for i in 0..DATA_SIZE_BYTES / 4 {
+            let start = HEADER_SIZE_BYTES + i * 4;
+            let end = HEADER_SIZE_BYTES + (i + 1) * 4;
+            let value_bytes: [u8; 4] = self.raw[start..end].try_into().unwrap();
+
+            let value = u32::from_le_bytes(value_bytes);
+
+            checksum = checksum.wrapping_add(value);
+        }
+
+        checksum
+    }
 }
