@@ -19,4 +19,14 @@ impl DataField for DataFieldU32 {
             self.location.read(raw_save_data).try_into().unwrap(),
         )))
     }
+
+    fn write(&self, raw_save_data: &mut [u8], value: &DataValue) {
+        if let DataValue::U32(v) = value.clone() {
+            let value_bytes = v.to_le_bytes().to_vec();
+
+            self.location.write(raw_save_data, value_bytes);
+        } else {
+            panic!("Unhandled value type {:?}", value);
+        }
+    }
 }
