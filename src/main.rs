@@ -12,7 +12,8 @@ fn main() {
     println!("{:}", filepath);
 
     let mut file = File::open(filepath).unwrap();
-    let save_data_manager = SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
+    let save_data_manager =
+        SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
 
     save_data_manager.print();
 }

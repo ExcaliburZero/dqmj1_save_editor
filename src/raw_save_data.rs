@@ -7,7 +7,7 @@ const SAVE_FILE_SIZE_BYTES: usize = HEADER_SIZE_BYTES + DATA_SIZE_BYTES;
 
 #[derive(Clone)]
 pub struct RawSaveData {
-    pub raw: [u8; SAVE_FILE_SIZE_BYTES]
+    pub raw: [u8; SAVE_FILE_SIZE_BYTES],
 }
 
 impl RawSaveData {

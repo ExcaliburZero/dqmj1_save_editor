@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub enum DataValue {
-    U32(u32)
+    U32(u32),
 }
 
 #[derive(Debug)]

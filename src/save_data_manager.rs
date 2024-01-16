@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::raw_save_data::RawSaveData;
 use crate::data_fields::{DataField, DataFieldU32};
+use crate::raw_save_data::RawSaveData;
 
 pub struct SaveDataManager {
     raw: RawSaveData,
@@ -11,9 +11,15 @@ pub struct SaveDataManager {
 impl SaveDataManager {
     pub fn from_raw_save_data(raw: &RawSaveData) -> SaveDataManager {
         let mut fields: HashMap<String, Box<dyn DataField>> = HashMap::new();
-        fields.insert(String::from("checksum"), Box::new(DataFieldU32::new(0xC, 4)));
+        fields.insert(
+            String::from("checksum"),
+            Box::new(DataFieldU32::new(0xC, 4)),
+        );
 
-        SaveDataManager { raw: raw.clone(), fields }
+        SaveDataManager {
+            raw: raw.clone(),
+            fields,
+        }
     }
 
     pub fn calculate_checksum(&self) -> u32 {
