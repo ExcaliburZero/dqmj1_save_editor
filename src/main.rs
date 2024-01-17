@@ -1,29 +1,72 @@
-extern crate dqmj1_save_editor;
+use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
+use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
 
-use std::env;
-use std::fs::File;
+struct AppModel {
+    gold: u32,
+}
 
-use dqmj1_save_editor::data_fields::DataValue;
-use dqmj1_save_editor::raw_save_data::RawSaveData;
-use dqmj1_save_editor::save_data_manager::SaveDataManager;
+#[derive(Debug)]
+enum AppMsg {
+    Save,
+}
+
+#[relm4::component]
+impl SimpleComponent for AppModel {
+    type Init = u32;
+
+    type Input = AppMsg;
+    type Output = ();
+
+    view! {
+        gtk::Window {
+            set_title: Some("Simple app"),
+            set_default_width: 300,
+            set_default_height: 100,
+
+            gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
+                set_spacing: 5,
+                set_margin_all: 5,
+
+                gtk::Label {
+                    #[watch]
+                    set_label: &format!("Gold: {}", model.gold),
+                    set_margin_all: 5,
+                },
+
+                gtk::Button::with_label("Save") {
+                    connect_clicked[sender] => move |_| {
+                        sender.input(AppMsg::Save);
+                    }
+                }
+            }
+        }
+    }
+
+    // Initialize the UI.
+    fn init(
+        counter: Self::Init,
+        root: &Self::Root,
+        sender: ComponentSender<Self>,
+    ) -> ComponentParts<Self> {
+        let model = AppModel { gold: counter };
+
+        // Insert the macro code generation here
+        let widgets = view_output!();
+
+        ComponentParts { model, widgets }
+    }
+
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+        match msg {
+            AppMsg::Save => {
+                self.gold = self.gold.wrapping_add(1);
+            }
+        }
+    }
+}
 
 fn main() {
-    let args: Vec<_> = env::args().collect();
-    let filepath = &args[1];
-    println!("{:}", filepath);
-
-    let mut file = File::open(filepath).unwrap();
-    let mut save_data_manager =
-        SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
-
-    save_data_manager.print();
-
-    println!("-----------");
-
-    save_data_manager.set(
-        "checksum",
-        &DataValue::U32(save_data_manager.calculate_checksum()),
-    );
-
-    save_data_manager.print();
+    let app = RelmApp::new("relm4.test.simple");
+    app.run::<AppModel>(0);
 }
