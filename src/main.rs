@@ -6,8 +6,10 @@ use relm4_components::{open_dialog::*, save_dialog::*};
 use gtk::prelude::*;
 use relm4::prelude::*;
 
+use std::path::PathBuf;
+
 struct AppModel {
-    gold: u32,
+    pub gold: u32,
     open_dialog: Controller<OpenDialog>,
 }
 
@@ -15,6 +17,11 @@ struct AppModel {
 enum AppMsg {
     Save,
     Open,
+    OpenRequest,
+    OpenResponse(PathBuf),
+    SaveRequest,
+    SaveResponse(PathBuf),
+    Ignore
 }
 
 #[relm4::component]
@@ -25,7 +32,6 @@ impl SimpleComponent for AppModel {
     type Output = ();
 
     view! {
-        #[root]
         main_window = gtk::ApplicationWindow {
             set_title: Some("Simple app"),
             set_default_width: 300,
@@ -37,8 +43,8 @@ impl SimpleComponent for AppModel {
                 set_margin_all: 5,
 
                 gtk::Label {
-                    #[watch]
-                    set_label: &format!("Gold: {}", model.gold),
+                    //#[watch]
+                    //set_label: &format!("Gold: {}", model.gold),
                     set_margin_all: 5,
                 },
 
@@ -53,7 +59,7 @@ impl SimpleComponent for AppModel {
 
     // Initialize the UI.
     fn init(
-        counter: Self::Init,
+        gold: Self::Init,
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
@@ -68,6 +74,14 @@ impl SimpleComponent for AppModel {
                 }
             }
         };
+
+        let open_dialog = OpenDialog::builder()
+            .transient_for_native(&root)
+            .launch(OpenDialogSettings::default())
+            .forward(sender.input_sender(), |response| match response {
+                OpenDialogResponse::Accept(path) => AppMsg::OpenResponse(path),
+                OpenDialogResponse::Cancel => AppMsg::Ignore,
+            });
 
         let app = relm4::main_application();
 
@@ -89,13 +103,13 @@ impl SimpleComponent for AppModel {
         app.set_menubar(Some(&main_menu));
 
         let model = AppModel {
-            gold: counter,
-            file_chooser: file_chooser,
+            gold,
+            open_dialog,
         };
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
         match msg {
             AppMsg::Save => {
                 self.gold = self.gold.wrapping_add(1);
@@ -103,6 +117,21 @@ impl SimpleComponent for AppModel {
             AppMsg::Open => {
                 println!("Doing open!");
             }
+            AppMsg::OpenRequest => self.open_dialog.emit(OpenDialogMsg::Open),
+            AppMsg::OpenResponse(path) => match std::fs::read_to_string(&path) {
+                Ok(contents) => {
+                    self.buffer.set_text(&contents);
+                    self.file_name = Some(
+                        path.file_name()
+                            .expect("The path has no file name")
+                            .to_str()
+                            .expect("Cannot convert file name to string")
+                            .to_string(),
+                    );
+                }
+                Err(e) => sender.input(AppMsg::ShowMessage(e.to_string())),
+            },
+            _ => (),
         }
     }
 }
