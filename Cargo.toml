@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 phf = { version = "0.11.2", features = ["macros"] }
-relm4 = "0.6.2"
+relm4 = { version = "0.6.2", features = ["libadwaita"] }
+relm4-components = "0.6.2"

@@ -1,13 +1,20 @@
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
+use relm4::actions::{AccelsPlus, ActionablePlus, RelmAction, RelmActionGroup};
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
+use relm4_components::{open_dialog::*, save_dialog::*};
+
+use gtk::prelude::*;
+use relm4::prelude::*;
 
 struct AppModel {
     gold: u32,
+    open_dialog: Controller<OpenDialog>,
 }
 
 #[derive(Debug)]
 enum AppMsg {
     Save,
+    Open,
 }
 
 #[relm4::component]
@@ -18,7 +25,8 @@ impl SimpleComponent for AppModel {
     type Output = ();
 
     view! {
-        gtk::Window {
+        #[root]
+        main_window = gtk::ApplicationWindow {
             set_title: Some("Simple app"),
             set_default_width: 300,
             set_default_height: 100,
@@ -40,7 +48,7 @@ impl SimpleComponent for AppModel {
                     }
                 }
             }
-        }
+        },
     }
 
     // Initialize the UI.
@@ -49,11 +57,41 @@ impl SimpleComponent for AppModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = AppModel { gold: counter };
-
         // Insert the macro code generation here
         let widgets = view_output!();
 
+        relm4::menu! {
+            main_menu: {
+                "File" {
+                    "Open" => OpenAction,
+                    "Save" => SaveAction,
+                }
+            }
+        };
+
+        let app = relm4::main_application();
+
+        app.set_accelerators_for_action::<SaveAction>(&["<primary>s"]);
+        let open_action: RelmAction<OpenAction> = {
+            RelmAction::new_stateless(move |_| {
+                println!("Open!");
+                sender.input(AppMsg::Open);
+            })
+        };
+
+        widgets.main_window.set_show_menubar(true);
+        let mut group = RelmActionGroup::<WindowActionGroup>::new();
+        group.add_action(open_action);
+        group.register_for_widget(&widgets.main_window);
+
+        let file_chooser = gtk::FileChooserNative::builder().transient_for(root);
+
+        app.set_menubar(Some(&main_menu));
+
+        let model = AppModel {
+            gold: counter,
+            file_chooser: file_chooser,
+        };
         ComponentParts { model, widgets }
     }
 
@@ -62,9 +100,17 @@ impl SimpleComponent for AppModel {
             AppMsg::Save => {
                 self.gold = self.gold.wrapping_add(1);
             }
+            AppMsg::Open => {
+                println!("Doing open!");
+            }
         }
     }
 }
+
+relm4::new_action_group!(WindowActionGroup, "win");
+
+relm4::new_stateless_action!(OpenAction, WindowActionGroup, "open");
+relm4::new_stateless_action!(SaveAction, WindowActionGroup, "save");
 
 fn main() {
     let app = RelmApp::new("relm4.test.simple");
