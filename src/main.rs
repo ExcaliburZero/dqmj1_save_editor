@@ -17,6 +17,7 @@ struct AppModel {
     open_dialog: Controller<OpenDialog>,
     save_dialog: Controller<SaveDialog>,
     message: Option<String>,
+    gold_buffer: gtk::EntryBuffer,
 }
 
 #[derive(Debug)]
@@ -49,10 +50,21 @@ impl SimpleComponent for AppModel {
                 set_spacing: 5,
                 set_margin_all: 5,
 
-                gtk::Label {
-                    #[watch]
-                    set_label: &format!("Gold: {}", model.data_manager.as_ref().map(|m| m.get("gold").get_u32().to_string()).unwrap_or_else(|| "".to_string())),
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 5,
                     set_margin_all: 5,
+
+                    gtk::Label {
+                        set_text: "Gold",
+                        set_margin_all: 5,
+                    },
+
+                    gtk::Entry {
+                        #[watch]
+                        set_buffer: &model.gold_buffer, //&format!("Gold: {}", model.data_manager.as_ref().map(|m| m.get("gold").get_u32().to_string()).unwrap_or_else(|| "".to_string())),
+                        set_margin_all: 5,
+                    },
                 },
 
                 gtk::Button::with_label("Save") {
@@ -113,6 +125,7 @@ impl SimpleComponent for AppModel {
             open_dialog,
             save_dialog,
             message: None,
+            gold_buffer: gtk::EntryBuffer::default(),
         };
 
         // Note: view_output!() has to below the model initialization, otherwise references to
@@ -140,6 +153,15 @@ impl SimpleComponent for AppModel {
                     SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
 
                 self.data_manager = Some(save_data_manager);
+                self.gold_buffer.set_text(
+                    &self
+                        .data_manager
+                        .as_ref()
+                        .unwrap()
+                        .get("gold")
+                        .get_u32()
+                        .to_string(),
+                );
             }
             _ => (),
         }
