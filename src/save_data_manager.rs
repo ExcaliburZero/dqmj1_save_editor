@@ -1,4 +1,6 @@
 use std::collections::BTreeMap;
+use std::io;
+use std::io::Write;
 
 use crate::data_fields::{DataField, DataFieldMonster, DataFieldU32, DataValue};
 use crate::raw_save_data::RawSaveData;
@@ -58,5 +60,9 @@ impl SaveDataManager {
         for (key, value) in self.fields.iter() {
             println!("{:}: {:?}", key, value.as_ref().read(&self.raw.raw));
         }
+    }
+
+    pub fn write_sav<W: Write>(&self, file: &mut W) -> io::Result<()> {
+        self.raw.write_sav(file)
     }
 }

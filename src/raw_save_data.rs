@@ -1,5 +1,5 @@
 use std::io;
-use std::io::Read;
+use std::io::{Read, Write};
 
 const HEADER_SIZE_BYTES: usize = 0x70;
 const DATA_SIZE_BYTES: usize = 10613 * 4;
@@ -31,5 +31,9 @@ impl RawSaveData {
         }
 
         checksum
+    }
+
+    pub fn write_sav<W: Write>(&self, file: &mut W) -> io::Result<()> {
+        file.write_all(&self.raw)
     }
 }

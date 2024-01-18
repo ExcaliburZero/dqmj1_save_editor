@@ -120,6 +120,15 @@ impl SimpleComponent for AppModel {
             })
         };
 
+        app.set_accelerators_for_action::<SaveAction>(&["<primary>s"]);
+        let save_sender = sender.clone();
+        let save_action: RelmAction<SaveAction> = {
+            RelmAction::new_stateless(move |_| {
+                println!("Save!");
+                save_sender.input(AppMsg::SaveRequest);
+            })
+        };
+
         app.set_menubar(Some(&main_menu));
 
         let model = AppModel {
@@ -137,6 +146,7 @@ impl SimpleComponent for AppModel {
         widgets.main_window.set_show_menubar(true);
         let mut group = RelmActionGroup::<WindowActionGroup>::new();
         group.add_action(open_action);
+        group.add_action(save_action);
         group.register_for_widget(&widgets.main_window);
 
         ComponentParts { model, widgets }
@@ -147,6 +157,14 @@ impl SimpleComponent for AppModel {
             AppMsg::Save => {}
             AppMsg::Open => {
                 println!("Doing open!");
+            }
+            AppMsg::SaveRequest => self.save_dialog.emit(SaveDialogMsg::Save),
+            AppMsg::SaveResponse(path) => {
+                let mut file = File::create(path).unwrap();
+                if let Some(dm) = &mut self.data_manager {
+                    dm.set("checksum", &DataValue::U32(dm.calculate_checksum()));
+                    dm.write_sav(&mut file).unwrap();
+                }
             }
             AppMsg::OpenRequest => self.open_dialog.emit(OpenDialogMsg::Open),
             AppMsg::OpenResponse(path) => {
