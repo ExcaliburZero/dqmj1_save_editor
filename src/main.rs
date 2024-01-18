@@ -1,3 +1,6 @@
+use dqmj1_save_editor::data_fields::DataValue;
+use dqmj1_save_editor::raw_save_data::RawSaveData;
+use dqmj1_save_editor::save_data_manager::SaveDataManager;
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
 use relm4::actions::{AccelsPlus, ActionablePlus, RelmAction, RelmActionGroup};
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
@@ -6,14 +9,14 @@ use relm4_components::{open_dialog::*, save_dialog::*};
 use gtk::prelude::*;
 use relm4::prelude::*;
 
+use std::fs::File;
 use std::path::PathBuf;
 
 struct AppModel {
-    pub gold: u32,
+    data_manager: Option<SaveDataManager>,
+    gold: u32,
     open_dialog: Controller<OpenDialog>,
     save_dialog: Controller<SaveDialog>,
-    buffer: gtk::TextBuffer,
-    file_name: Option<String>,
     message: Option<String>,
 }
 
@@ -108,10 +111,9 @@ impl SimpleComponent for AppModel {
 
         let model = AppModel {
             gold,
+            data_manager: None,
             open_dialog,
             save_dialog,
-            buffer: gtk::TextBuffer::new(None),
-            file_name: None,
             message: None,
         };
 
@@ -136,19 +138,17 @@ impl SimpleComponent for AppModel {
                 println!("Doing open!");
             }
             AppMsg::OpenRequest => self.open_dialog.emit(OpenDialogMsg::Open),
-            AppMsg::OpenResponse(path) => match std::fs::read_to_string(&path) {
-                Ok(contents) => {
-                    self.buffer.set_text(&contents);
-                    self.file_name = Some(
-                        path.file_name()
-                            .expect("The path has no file name")
-                            .to_str()
-                            .expect("Cannot convert file name to string")
-                            .to_string(),
-                    );
-                }
-                Err(e) => sender.input(AppMsg::ShowMessage(e.to_string())),
-            },
+            AppMsg::OpenResponse(path) => {
+                let mut file = File::open(path).unwrap();
+                let save_data_manager =
+                    SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
+
+                self.data_manager = Some(save_data_manager);
+                self.gold = match self.data_manager.as_ref().unwrap().get("gold") {
+                    DataValue::U32(v) => v,
+                    _ => panic!(),
+                };
+            }
             _ => (),
         }
     }
