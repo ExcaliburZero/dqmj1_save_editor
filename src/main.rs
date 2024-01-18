@@ -30,6 +30,7 @@ enum AppMsg {
     SaveResponse(PathBuf),
     ShowMessage(String),
     Ignore,
+    SetGold,
 }
 
 #[relm4::component]
@@ -64,6 +65,7 @@ impl SimpleComponent for AppModel {
                         #[watch]
                         set_buffer: &model.gold_buffer, //&format!("Gold: {}", model.data_manager.as_ref().map(|m| m.get("gold").get_u32().to_string()).unwrap_or_else(|| "".to_string())),
                         set_margin_all: 5,
+                        connect_changed => AppMsg::SetGold,
                     },
                 },
 
@@ -163,6 +165,16 @@ impl SimpleComponent for AppModel {
                         .to_string(),
                 );
             }
+            AppMsg::SetGold => match self.gold_buffer.text().parse::<u32>() {
+                Ok(new_value) => {
+                    println!("Changing gold: {}", new_value);
+                    if let Some(dm) = &mut self.data_manager {
+                        dm.set("gold", &DataValue::U32(new_value));
+                        println!("Successfully changed gold: {}", new_value);
+                    }
+                }
+                Err(_) => (),
+            },
             _ => (),
         }
     }
