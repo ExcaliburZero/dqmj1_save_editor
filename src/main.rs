@@ -14,7 +14,6 @@ use std::path::PathBuf;
 
 struct AppModel {
     data_manager: Option<SaveDataManager>,
-    gold: u32,
     open_dialog: Controller<OpenDialog>,
     save_dialog: Controller<SaveDialog>,
     message: Option<String>,
@@ -52,7 +51,7 @@ impl SimpleComponent for AppModel {
 
                 gtk::Label {
                     #[watch]
-                    set_label: &format!("Gold: {}", model.gold),
+                    set_label: &format!("Gold: {}", model.data_manager.as_ref().map(|m| m.get("gold").get_u32().to_string()).unwrap_or_else(|| "".to_string())),
                     set_margin_all: 5,
                 },
 
@@ -110,7 +109,6 @@ impl SimpleComponent for AppModel {
         app.set_menubar(Some(&main_menu));
 
         let model = AppModel {
-            gold,
             data_manager: None,
             open_dialog,
             save_dialog,
@@ -131,9 +129,7 @@ impl SimpleComponent for AppModel {
 
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
         match msg {
-            AppMsg::Save => {
-                self.gold = self.gold.wrapping_add(1);
-            }
+            AppMsg::Save => {}
             AppMsg::Open => {
                 println!("Doing open!");
             }
@@ -144,10 +140,6 @@ impl SimpleComponent for AppModel {
                     SaveDataManager::from_raw_save_data(&RawSaveData::from_sav(&mut file).unwrap());
 
                 self.data_manager = Some(save_data_manager);
-                self.gold = match self.data_manager.as_ref().unwrap().get("gold") {
-                    DataValue::U32(v) => v,
-                    _ => panic!(),
-                };
             }
             _ => (),
         }

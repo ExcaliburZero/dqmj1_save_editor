@@ -7,6 +7,15 @@ pub enum DataValue {
     Monster(Monster),
 }
 
+impl DataValue {
+    pub fn get_u32(&self) -> u32 {
+        match self {
+            DataValue::U32(v) => *v,
+            _ => panic!(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum ValueReadFailureReason {}
 
