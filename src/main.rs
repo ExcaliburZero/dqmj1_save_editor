@@ -48,8 +48,8 @@ impl SimpleComponent for AppModel {
                 set_margin_all: 5,
 
                 gtk::Label {
-                    //#[watch]
-                    //set_label: &format!("Gold: {}", model.gold),
+                    #[watch]
+                    set_label: &format!("Gold: {}", model.gold),
                     set_margin_all: 5,
                 },
 
@@ -68,9 +68,6 @@ impl SimpleComponent for AppModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        // Insert the macro code generation here
-        let widgets = view_output!();
-
         relm4::menu! {
             main_menu: {
                 "File" {
@@ -98,18 +95,14 @@ impl SimpleComponent for AppModel {
 
         let app = relm4::main_application();
 
-        app.set_accelerators_for_action::<SaveAction>(&["<primary>s"]);
+        app.set_accelerators_for_action::<OpenAction>(&["<primary>o"]);
+        let open_sender = sender.clone();
         let open_action: RelmAction<OpenAction> = {
             RelmAction::new_stateless(move |_| {
                 println!("Open!");
-                sender.input(AppMsg::OpenRequest);
+                open_sender.input(AppMsg::OpenRequest);
             })
         };
-
-        widgets.main_window.set_show_menubar(true);
-        let mut group = RelmActionGroup::<WindowActionGroup>::new();
-        group.add_action(open_action);
-        group.register_for_widget(&widgets.main_window);
 
         app.set_menubar(Some(&main_menu));
 
@@ -121,6 +114,16 @@ impl SimpleComponent for AppModel {
             file_name: None,
             message: None,
         };
+
+        // Note: view_output!() has to below the model initialization, otherwise references to
+        // model in the GUI elements will produce the following error
+        // error[E0425]: cannot find value `model` in this scope
+        let widgets = view_output!();
+        widgets.main_window.set_show_menubar(true);
+        let mut group = RelmActionGroup::<WindowActionGroup>::new();
+        group.add_action(open_action);
+        group.register_for_widget(&widgets.main_window);
+
         ComponentParts { model, widgets }
     }
 
