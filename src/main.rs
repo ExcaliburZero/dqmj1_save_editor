@@ -11,6 +11,10 @@ use std::path::PathBuf;
 struct AppModel {
     pub gold: u32,
     open_dialog: Controller<OpenDialog>,
+    save_dialog: Controller<SaveDialog>,
+    buffer: gtk::TextBuffer,
+    file_name: Option<String>,
+    message: Option<String>,
 }
 
 #[derive(Debug)]
@@ -21,7 +25,8 @@ enum AppMsg {
     OpenResponse(PathBuf),
     SaveRequest,
     SaveResponse(PathBuf),
-    Ignore
+    ShowMessage(String),
+    Ignore,
 }
 
 #[relm4::component]
@@ -83,13 +88,21 @@ impl SimpleComponent for AppModel {
                 OpenDialogResponse::Cancel => AppMsg::Ignore,
             });
 
+        let save_dialog = SaveDialog::builder()
+            .transient_for_native(&root)
+            .launch(SaveDialogSettings::default())
+            .forward(sender.input_sender(), |response| match response {
+                SaveDialogResponse::Accept(path) => AppMsg::SaveResponse(path),
+                SaveDialogResponse::Cancel => AppMsg::Ignore,
+            });
+
         let app = relm4::main_application();
 
         app.set_accelerators_for_action::<SaveAction>(&["<primary>s"]);
         let open_action: RelmAction<OpenAction> = {
             RelmAction::new_stateless(move |_| {
                 println!("Open!");
-                sender.input(AppMsg::Open);
+                sender.input(AppMsg::OpenRequest);
             })
         };
 
@@ -98,13 +111,15 @@ impl SimpleComponent for AppModel {
         group.add_action(open_action);
         group.register_for_widget(&widgets.main_window);
 
-        let file_chooser = gtk::FileChooserNative::builder().transient_for(root);
-
         app.set_menubar(Some(&main_menu));
 
         let model = AppModel {
             gold,
             open_dialog,
+            save_dialog,
+            buffer: gtk::TextBuffer::new(None),
+            file_name: None,
+            message: None,
         };
         ComponentParts { model, widgets }
     }
