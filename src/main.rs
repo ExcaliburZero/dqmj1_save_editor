@@ -62,7 +62,6 @@ impl SimpleComponent for AppModel {
                     },
 
                     gtk::Entry {
-                        #[watch]
                         set_buffer: &model.gold_buffer, //&format!("Gold: {}", model.data_manager.as_ref().map(|m| m.get("gold").get_u32().to_string()).unwrap_or_else(|| "".to_string())),
                         set_margin_all: 5,
                         connect_changed => AppMsg::SetGold,
